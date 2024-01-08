@@ -7,6 +7,6 @@
     # conditional formatting that will highlight positive change in green and negative change in red.
     # run on every worksheet at once.
 
-    #Note: All resources used to create this VBA code are listed in the commnets section in the VBA code itself. 
+    #Note: All resources used to create this VBA code are listed in the comments section in the VBA code itself. 
         #learning assisstant (ASK-296739) helped debug my code 
         #XPERT learning assisstant was used for misc questions
