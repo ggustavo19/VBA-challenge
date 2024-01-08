@@ -1,0 +1,143 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2759
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Sub Ticker_Data()\
+\
+    ' Declare variables\
+    Dim ticker As String\
+    Dim rowCount As Long\
+    Dim i As Long\
+    Dim location As Long 'to keep track of each ticker\
+    Dim volume As Double\
+    Dim change As Double\
+    Dim pchange As Double\
+    Dim OP As Double\
+    Dim CP As Double\
+    Dim ws As Worksheet\
+    Dim start As Long 'to keep track of the opening price for each ticker.\
+    Dim percentChange As Double\
+    \
+    ' Loop through all worksheets- reference : https://www.youtube.com/watch?v=-75HKRrIMI8&ab_channel=ExcelVbaIsFun\
+    For Each ws In Worksheets\
+    \
+        ' Set title row\
+        ws.Range("I1").Value = "Ticker"\
+        ws.Range("J1").Value = "Yearly Change"\
+        ws.Range("K1").Value = "Percent Change"\
+        ws.Range("L1").Value = "Total Stock Volume"\
+        ws.Range("P1").Value = "Ticker"\
+        ws.Range("Q1").Value = "Value"\
+        ws.Range("O2").Value = "Greatest % Increase"\
+        ws.Range("O3").Value = "Greatest % Decrease"\
+        ws.Range("O4").Value = "Greatest Total Volume"\
+        \
+        ' Set initial values\
+        location = 2 ' start in column 2 because of the headers\
+        volume = 0\
+        change = 0\
+        start = 2\
+        rowCount = ws.Cells(Rows.Count, 1).End(xlUp).Row ' get the row number of the last row with data\
+        \
+        ' Loop through data rows\
+        For i = 2 To rowCount\
+            ' If ticker changes then print results\
+            If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then\
+                ' set ticker data column as ticker\
+                ticker = ws.Cells(i, 1).Value\
+                ' Adds volume total as it loops through all rows from column 7\
+                volume = volume + ws.Cells(i, 7).Value\
+                \
+                ' Calculate change and the percentage changed\
+                'Start variable-more robust and better handles scenarios where the opening price is zero or changes for each ticker instead of using"i".\
+                OP = ws.Cells(start, 3).Value\
+                CP = ws.Cells(i, 6).Value\
+                change = CP - OP\
+                \
+                If OP = 0 Then\
+                    pchange = 0\
+                Else\
+                    pchange = change / OP\
+                End If\
+                \
+                ' Print results in column\
+                ws.Range("I" & location).Value = ticker\
+                ws.Range("J" & location).Value = change\
+                ws.Range("J" & location).NumberFormat = "0.00"\
+                ws.Range("K" & location).Value = pchange\
+                ws.Range("K" & location).NumberFormat = "0.00%"\
+                ws.Range("L" & location).Value = volume\
+                \
+                ' Color formatting- reference: http://dmcritchie.mvps.org/excel/colors.htm\
+                If ws.Range("J" & location).Value > 0 Then\
+                    ws.Range("J" & location).Interior.ColorIndex = 4\
+                ElseIf ws.Range("J" & location).Value < 0 Then\
+                    ws.Range("J" & location).Interior.ColorIndex = 3\
+                Else\
+                    ws.Range("J" & location).Interior.ColorIndex = 0\
+                End If\
+                \
+                ' Reset\
+                ' Add 1 to location to loop to the next row\
+                location = location + 1\
+                volume = 0\
+                change = 0\
+                start = i + 1\
+                \
+            ' If the cell immediately next is the same\
+            Else\
+                volume = volume + ws.Cells(i, 7).Value\
+            End If\
+        Next i\
+        \
+'Calculate stats values\
+'need to declare new variables for the information we are gathering, 3 calculations and 3tickers needed.\
+Dim maxinc As Double\
+Dim maxdec As Double\
+Dim maxvol As Double\
+Dim maxincT As String\
+Dim maxdecT As String\
+Dim maxvolT As String\
+\
+'we need the row count for the columns priunted in columns I through L\
+Dim MaxRowCount As Long\
+    MaxRowCount = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row\
+    \
+' Calculate to find the Ticker with the max increase\
+\
+    'https://www.wallstreetmojo.com/vba-max/ - code for Max,min, index, and match reference\
+    'index(range/array,rownumber), Match(lookup_value,in this Array, 0(for perfect match))\
+    maxinc = Application.WorksheetFunction.Max(ws.Range("K2:K" & MaxRowCount))\
+    maxincT = Application.WorksheetFunction.Index(ws.Range("I2:I" & MaxRowCount), Application.WorksheetFunction.Match(maxinc, ws.Range("K2:K" & MaxRowCount), 0))\
+    \
+    ' calculate to find maximum decrease and its ticker\
+    maxdec = Application.WorksheetFunction.Min(ws.Range("K2:K" & MaxRowCount))\
+    maxdecT = Application.WorksheetFunction.Index(ws.Range("I2:I" & MaxRowCount), Application.WorksheetFunction.Match(maxdec, ws.Range("K2:K" & MaxRowCount), 0))\
+    \
+    ' calculate to find maximum volume and its ticker\
+    maxvol = Application.WorksheetFunction.Max(ws.Range("L2:L" & MaxRowCount))\
+    maxvolT = Application.WorksheetFunction.Index(ws.Range("I2:I" & MaxRowCount), Application.WorksheetFunction.Match(maxvol, ws.Range("L2:L" & MaxRowCount), 0))\
+    \
+    ' Print results in the columns "P" and "Q"\
+    ws.Cells(2, 16).Value = maxincT\
+    ws.Cells(2, 17).Value = maxinc\
+    ws.Cells(2, 17).NumberFormat = "0.00%" 'need percentage form\
+    ws.Cells(3, 16).Value = maxdecT\
+    ws.Cells(3, 17).Value = maxdec\
+    ws.Cells(3, 17).NumberFormat = "0.00%" 'need percentage form\
+    ws.Cells(4, 16).Value = maxvolT\
+    ws.Cells(4, 17).Value = maxvol\
+    \
+    'autofit cells\
+    ws.Columns(10).AutoFit\
+    ws.Columns(11).AutoFit\
+    ws.Columns(12).AutoFit\
+    ws.Columns(15).AutoFit\
+        \
+        \
+    Next ws\
+End Sub\
+}
